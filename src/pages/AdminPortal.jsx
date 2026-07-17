@@ -33,6 +33,7 @@ export default function AdminPortal({ navigate }) {
   const [session, setSession] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
+  const lastCheckedUserId = useRef(null);
   
   // Dashboard & Management States
   const [drivers, setDrivers] = useState([]);
@@ -69,20 +70,26 @@ export default function AdminPortal({ navigate }) {
 
   // 1. Monitor Authentication Session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        checkAdminRole(session.user.id);
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      if (s) {
+        lastCheckedUserId.current = s.user.id;
+        checkAdminRole(s.user.id);
       } else {
         setCheckingRole(false);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        checkAdminRole(session.user.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (s) {
+        // Only re-check if user actually changed (prevents loop)
+        if (lastCheckedUserId.current !== s.user.id) {
+          lastCheckedUserId.current = s.user.id;
+          checkAdminRole(s.user.id);
+        }
       } else {
+        lastCheckedUserId.current = null;
         setIsAdmin(false);
         setCheckingRole(false);
       }
@@ -397,15 +404,21 @@ export default function AdminPortal({ navigate }) {
   };
 
   // Render Login Screen if not authenticated
+  if (checkingRole && session) {
+    // Still checking role — show spinner, NOT the login form
+    return (
+      <BlueprintBackground>
+        <div className="flex flex-col items-center justify-center p-6 bg-white/70 backdrop-blur rounded border border-slate-200 shadow-sm relative">
+          <Loader size={30} className="animate-spin text-[#bfa37a] mb-2" />
+          <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">Giriş hüququ yoxlanılır...</span>
+        </div>
+      </BlueprintBackground>
+    );
+  }
+
   if (!session || !isAdmin) {
     return (
       <BlueprintBackground>
-        {checkingRole ? (
-          <div className="flex flex-col items-center justify-center p-6 bg-white/70 backdrop-blur rounded border border-slate-200 shadow-sm relative">
-            <Loader size={30} className="animate-spin text-[#bfa37a] mb-2" />
-            <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">Giriş hüququ yoxlanılır...</span>
-          </div>
-        ) : (
           <div className="w-full max-w-sm rounded-lg p-6 relative blueprint-card overflow-hidden">
             <div className="blueprint-corner blueprint-corner-tl" />
             <div className="blueprint-corner blueprint-corner-tr" />
@@ -472,7 +485,6 @@ export default function AdminPortal({ navigate }) {
               <span>Skanerə Qayıt</span>
             </button>
           </div>
-        )}
       </BlueprintBackground>
     );
   }
