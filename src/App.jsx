@@ -4,11 +4,18 @@ import AdminPortal from './pages/AdminPortal';
 import NotFound from './pages/NotFound';
 import PremiumSplashScreen from './components/PremiumSplashScreen';
 import { supabase } from './utils/supabaseClient';
-import { Search, Info, Car, Shield, Link2, Sparkles, Filter, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Search, Info, Car, Shield, Link2, Sparkles, Filter, AlertTriangle, ArrowRight, Phone, Download, QrCode } from 'lucide-react';
+import QRCode from 'qrcode';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  // QR Generator states
+  const [qrPhone, setQrPhone] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState(null);
+  const [qrError, setQrError] = useState('');
+  const [qrLoading, setQrLoading] = useState(false);
 
 
 
@@ -126,6 +133,89 @@ export default function App() {
                     Park edilmiş avtomobil yolu kəsdikdə, kameranız ilə şüşədəki QR kodu skan edin və ya yaxınlaşıb NFC çipini toxundurun. Sürücünün nömrəsini görmədən birbaşa zəng edə və ya WhatsApp ilə xəbərdarlıq edə bilərsiniz.
                   </p>
                 </div>
+              </div>
+            </section>
+
+            {/* QR Generator Section */}
+            <section id="qr-generator" className="qr-generator-section">
+              <div className="qr-generator-header">
+                <QrCode size={28} style={{ color: '#bfa37a' }} />
+                <h2>QR Kod Yaradıcı</h2>
+                <p>Telefon nömrəsini daxil edin — QR kod birbaşa zəngə yönləndirəcək, heç bir sayt linki olmadan.</p>
+              </div>
+
+              <div className="qr-generator-body">
+                <div className="qr-input-group">
+                  <div className="qr-input-wrapper">
+                    <span className="qr-input-prefix">+994</span>
+                    <input
+                      type="tel"
+                      placeholder="50 123 45 67"
+                      value={qrPhone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val.length <= 9) {
+                          setQrPhone(val);
+                          setQrError('');
+                        }
+                      }}
+                      className="qr-phone-input"
+                      maxLength={9}
+                    />
+                  </div>
+                  <button
+                    className="btn-primary qr-generate-btn"
+                    disabled={qrLoading}
+                    onClick={async () => {
+                      const cleaned = qrPhone.replace(/\s/g, '');
+                      if (cleaned.length < 9) {
+                        setQrError('Nömrə 9 rəqəmdən ibarət olmalıdır (məs: 501234567)');
+                        return;
+                      }
+                      setQrLoading(true);
+                      setQrError('');
+                      try {
+                        const telUri = `tel:+994${cleaned}`;
+                        const url = await QRCode.toDataURL(telUri, {
+                          width: 400,
+                          margin: 2,
+                          color: { dark: '#0f172a', light: '#ffffff' },
+                          errorCorrectionLevel: 'H'
+                        });
+                        setQrDataUrl(url);
+                      } catch (err) {
+                        setQrError('QR kod yaradılarkən xəta baş verdi.');
+                      } finally {
+                        setQrLoading(false);
+                      }
+                    }}
+                  >
+                    {qrLoading ? 'Yaradılır...' : 'QR Yarat'}
+                  </button>
+                </div>
+
+                {qrError && <p className="qr-error-msg">{qrError}</p>}
+
+                {qrDataUrl && (
+                  <div className="qr-result">
+                    <div className="qr-result-card">
+                      <img src={qrDataUrl} alt="QR Kod" className="qr-result-img" />
+                      <p className="qr-result-phone">
+                        <Phone size={14} />
+                        <span>+994 {qrPhone.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4')}</span>
+                      </p>
+                      <p className="qr-result-hint">Bu QR kodu skan edən şəxs birbaşa bu nömrəyə zəng edəcək.</p>
+                      <a
+                        href={qrDataUrl}
+                        download={`avtoqr-${qrPhone}.png`}
+                        className="btn-primary qr-download-btn"
+                      >
+                        <Download size={14} />
+                        <span>PNG Olaraq Yüklə</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           </main>
