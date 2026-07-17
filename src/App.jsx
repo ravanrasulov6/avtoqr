@@ -4,7 +4,7 @@ import AdminPortal from './pages/AdminPortal';
 import NotFound from './pages/NotFound';
 import PremiumSplashScreen from './components/PremiumSplashScreen';
 import { supabase } from './utils/supabaseClient';
-import { Car, Sparkles, ArrowRight } from 'lucide-react';
+import { Car, Sparkles, ArrowRight, Phone } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -134,7 +134,25 @@ export default function App() {
       );
     }
 
-    // 2. Admin Portal
+    // 2. Direct Call Redirect (QR codes point here for universal compatibility)
+    if (path.startsWith('/call/')) {
+      const phone = path.substring(6).replace(/[^0-9+]/g, '');
+      if (phone) {
+        // Immediately redirect to tel: — works on all phones
+        window.location.href = `tel:${phone.startsWith('+') ? phone : '+' + phone}`;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'var(--font-family)', gap: '12px' }}>
+            <Phone size={32} style={{ color: '#bfa37a' }} />
+            <p style={{ fontSize: '14px', color: '#475569' }}>Zəng açılır...</p>
+            <a href={`tel:${phone.startsWith('+') ? phone : '+' + phone}`} style={{ fontSize: '13px', color: '#bfa37a', textDecoration: 'underline' }}>
+              {phone.startsWith('+') ? phone : '+' + phone}
+            </a>
+          </div>
+        );
+      }
+    }
+
+    // 3. Admin Portal
     if (path === '/admin') {
       return <AdminPortal navigate={navigate} />;
     }
