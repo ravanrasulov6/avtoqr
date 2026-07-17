@@ -16,6 +16,13 @@ export default function App() {
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [qrError, setQrError] = useState('');
   const [qrLoading, setQrLoading] = useState(false);
+  const [qrActiveTab, setQrActiveTab] = useState('site'); // 'site' or 'number'
+
+  // "Sayta Əlavə Et" states
+  const [sitePhone, setSitePhone] = useState('');
+  const [siteName, setSiteName] = useState('');
+  const [siteLoading, setSiteLoading] = useState(false);
+  const [siteMsg, setSiteMsg] = useState(null); // { type: 'success'|'error', text, slug? }
 
 
 
@@ -136,84 +143,188 @@ export default function App() {
               </div>
             </section>
 
-            {/* QR Generator Section */}
+            {/* Admin Panel — Əlavə Et */}
             <section id="qr-generator" className="qr-generator-section">
               <div className="qr-generator-header">
                 <QrCode size={28} style={{ color: '#bfa37a' }} />
-                <h2>QR Kod Yaradıcı</h2>
-                <p>Telefon nömrəsini daxil edin — QR kod birbaşa zəngə yönləndirəcək, heç bir sayt linki olmadan.</p>
+                <h2>Nömrə Əlavə Et</h2>
+                <p>Telefon nömrəsini daxil edin — sayta əlavə edin və ya birbaşa zəng QR kodu yaradın.</p>
               </div>
 
+              {/* Tab Switcher */}
               <div className="qr-generator-body">
-                <div className="qr-input-group">
-                  <div className="qr-input-wrapper">
-                    <span className="qr-input-prefix">+994</span>
-                    <input
-                      type="tel"
-                      placeholder="50 123 45 67"
-                      value={qrPhone}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        if (val.length <= 9) {
-                          setQrPhone(val);
-                          setQrError('');
-                        }
-                      }}
-                      className="qr-phone-input"
-                      maxLength={9}
-                    />
-                  </div>
+                <div className="qr-tabs">
                   <button
-                    className="btn-primary qr-generate-btn"
-                    disabled={qrLoading}
-                    onClick={async () => {
-                      const cleaned = qrPhone.replace(/\s/g, '');
-                      if (cleaned.length < 9) {
-                        setQrError('Nömrə 9 rəqəmdən ibarət olmalıdır (məs: 501234567)');
-                        return;
-                      }
-                      setQrLoading(true);
-                      setQrError('');
-                      try {
-                        const telUri = `tel:+994${cleaned}`;
-                        const url = await QRCode.toDataURL(telUri, {
-                          width: 400,
-                          margin: 2,
-                          color: { dark: '#0f172a', light: '#ffffff' },
-                          errorCorrectionLevel: 'H'
-                        });
-                        setQrDataUrl(url);
-                      } catch (err) {
-                        setQrError('QR kod yaradılarkən xəta baş verdi.');
-                      } finally {
-                        setQrLoading(false);
-                      }
-                    }}
+                    className={`qr-tab ${qrActiveTab === 'site' ? 'active' : ''}`}
+                    onClick={() => { setQrActiveTab('site'); setQrError(''); setSiteMsg(null); }}
                   >
-                    {qrLoading ? 'Yaradılır...' : 'QR Yarat'}
+                    Sayta Əlavə Et
+                  </button>
+                  <button
+                    className={`qr-tab ${qrActiveTab === 'number' ? 'active' : ''}`}
+                    onClick={() => { setQrActiveTab('number'); setQrError(''); setSiteMsg(null); }}
+                  >
+                    Nömrə QR Yarat
                   </button>
                 </div>
 
-                {qrError && <p className="qr-error-msg">{qrError}</p>}
-
-                {qrDataUrl && (
-                  <div className="qr-result">
-                    <div className="qr-result-card">
-                      <img src={qrDataUrl} alt="QR Kod" className="qr-result-img" />
-                      <p className="qr-result-phone">
-                        <Phone size={14} />
-                        <span>+994 {qrPhone.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4')}</span>
-                      </p>
-                      <p className="qr-result-hint">Bu QR kodu skan edən şəxs birbaşa bu nömrəyə zəng edəcək.</p>
-                      <a
-                        href={qrDataUrl}
-                        download={`avtoqr-${qrPhone}.png`}
-                        className="btn-primary qr-download-btn"
-                      >
-                        <Download size={14} />
-                        <span>PNG Olaraq Yüklə</span>
-                      </a>
+                {/* Tab 1: Sayta Əlavə Et */}
+                {qrActiveTab === 'site' && (
+                  <div className="qr-tab-content">
+                    <div className="qr-field">
+                      <label className="qr-label">Ad və Soyad</label>
+                      <input
+                        type="text"
+                        placeholder="Məs: Rəvan Rəsulov"
+                        value={siteName}
+                        onChange={(e) => setSiteName(e.target.value)}
+                        className="qr-text-input"
+                      />
                     </div>
+                    <div className="qr-field">
+                      <label className="qr-label">Telefon Nömrəsi</label>
+                      <div className="qr-input-wrapper">
+                        <span className="qr-input-prefix">+994</span>
+                        <input
+                          type="tel"
+                          placeholder="50 123 45 67"
+                          value={sitePhone}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9]/g, '');
+                            if (val.length <= 9) setSitePhone(val);
+                          }}
+                          className="qr-phone-input"
+                          maxLength={9}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      className="btn-primary qr-generate-btn"
+                      disabled={siteLoading}
+                      onClick={async () => {
+                        const cleaned = sitePhone.replace(/\s/g, '');
+                        if (!siteName.trim()) { setSiteMsg({ type: 'error', text: 'Ad və soyad daxil edin.' }); return; }
+                        if (cleaned.length < 9) { setSiteMsg({ type: 'error', text: 'Nömrə 9 rəqəmdən ibarət olmalıdır.' }); return; }
+                        setSiteLoading(true);
+                        setSiteMsg(null);
+                        try {
+                          const slug = siteName.trim().toLowerCase().replace(/[^a-zə0-9]/gi, '').substring(0, 20) + cleaned.substring(5);
+                          const payload = {
+                            fullname: siteName.trim(),
+                            phone_number: `+994${cleaned}`,
+                            car_plate: cleaned,
+                            custom_slug: slug,
+                            whatsapp_enabled: true,
+                            emergency_status: false,
+                          };
+                          const { error } = await supabase.from('drivers').insert(payload);
+                          if (error) throw error;
+                          setSiteMsg({ type: 'success', text: 'Uğurla sayta əlavə edildi!', slug });
+                          setSiteName('');
+                          setSitePhone('');
+                        } catch (err) {
+                          setSiteMsg({ type: 'error', text: err.message || 'Xəta baş verdi.' });
+                        } finally {
+                          setSiteLoading(false);
+                        }
+                      }}
+                    >
+                      {siteLoading ? 'Əlavə edilir...' : 'Sayta Əlavə Et'}
+                    </button>
+
+                    {siteMsg && (
+                      <div className={`qr-msg ${siteMsg.type}`}>
+                        <p>{siteMsg.text}</p>
+                        {siteMsg.slug && (
+                          <a
+                            href={`/${siteMsg.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="qr-msg-link"
+                          >
+                            avtoqr.vercel.app/{siteMsg.slug} →
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab 2: Nömrə QR Yarat */}
+                {qrActiveTab === 'number' && (
+                  <div className="qr-tab-content">
+                    <div className="qr-field">
+                      <label className="qr-label">Telefon Nömrəsi</label>
+                      <div className="qr-input-wrapper">
+                        <span className="qr-input-prefix">+994</span>
+                        <input
+                          type="tel"
+                          placeholder="50 123 45 67"
+                          value={qrPhone}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9]/g, '');
+                            if (val.length <= 9) {
+                              setQrPhone(val);
+                              setQrError('');
+                            }
+                          }}
+                          className="qr-phone-input"
+                          maxLength={9}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      className="btn-primary qr-generate-btn"
+                      disabled={qrLoading}
+                      onClick={async () => {
+                        const cleaned = qrPhone.replace(/\s/g, '');
+                        if (cleaned.length < 9) {
+                          setQrError('Nömrə 9 rəqəmdən ibarət olmalıdır (məs: 501234567)');
+                          return;
+                        }
+                        setQrLoading(true);
+                        setQrError('');
+                        try {
+                          const telUri = `tel:+994${cleaned}`;
+                          const url = await QRCode.toDataURL(telUri, {
+                            width: 400,
+                            margin: 2,
+                            color: { dark: '#0f172a', light: '#ffffff' },
+                            errorCorrectionLevel: 'H'
+                          });
+                          setQrDataUrl(url);
+                        } catch (err) {
+                          setQrError('QR kod yaradılarkən xəta baş verdi.');
+                        } finally {
+                          setQrLoading(false);
+                        }
+                      }}
+                    >
+                      {qrLoading ? 'Yaradılır...' : 'QR Yarat'}
+                    </button>
+
+                    {qrError && <p className="qr-error-msg">{qrError}</p>}
+
+                    {qrDataUrl && (
+                      <div className="qr-result">
+                        <div className="qr-result-card">
+                          <img src={qrDataUrl} alt="QR Kod" className="qr-result-img" />
+                          <p className="qr-result-phone">
+                            <Phone size={14} />
+                            <span>+994 {qrPhone.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4')}</span>
+                          </p>
+                          <p className="qr-result-hint">Bu QR kodu skan edən şəxs birbaşa bu nömrəyə zəng edəcək.</p>
+                          <a
+                            href={qrDataUrl}
+                            download={`avtoqr-${qrPhone}.png`}
+                            className="btn-primary qr-download-btn"
+                          >
+                            <Download size={14} />
+                            <span>PNG Olaraq Yüklə</span>
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
