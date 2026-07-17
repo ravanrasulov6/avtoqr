@@ -63,8 +63,8 @@ export default function AdminQuickAdd() {
     setQrLoading(true);
     setQrError('');
     try {
-      const callUrl = `https://avtoqr.vercel.app/call/+994${cleaned}`;
-      const url = await QRCode.toDataURL(callUrl, {
+      const telUri = `tel:+994${cleaned}`;
+      const url = await QRCode.toDataURL(telUri, {
         width: 400,
         margin: 2,
         color: { dark: '#0f172a', light: '#ffffff' },
