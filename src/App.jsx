@@ -61,10 +61,7 @@ export default function App() {
             <section className="landing-hero">
               {/* Left Side: Copywriting */}
               <div className="hero-content">
-                <div className="hero-badge">
-                  <Sparkles size={12} />
-                  <span>YENİ NƏSİL PARKİNG SİSTEMİ</span>
-                </div>
+
                 <h1 className="hero-title">
                   QR və NFC ilə <br />
                   <span>Avtomobilinizi Rahat Saxlayın</span>
@@ -108,21 +105,7 @@ export default function App() {
                   <p>Yolu kəsən maşın sahibinə bir toxunuşla birbaşa zəng açın.</p>
                 </div>
 
-                <div className="concept-card">
-                  <div className="concept-icon">
-                    <Shield size={16} />
-                  </div>
-                  <h4>Məxfilik Qalxanı</h4>
-                  <p>Sürücünün real mobil nömrəsi heç kimə göstərilmir.</p>
-                </div>
 
-                <div className="concept-card">
-                  <div className="concept-icon">
-                    <Link2 size={16} />
-                  </div>
-                  <h4>Admin Portalı</h4>
-                  <p>Fərdi QR kodları, nömrələri və məlumatları asanlıqla idarə edin.</p>
-                </div>
               </div>
             </section>
 
