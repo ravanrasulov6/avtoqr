@@ -228,6 +228,13 @@ export default function AdminPortal({ navigate }) {
       return;
     }
 
+    const cleanPlate = carPlate.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    const isValidPlate = /^[0-9]{2}[A-Z]{1,2}[0-9]{3}$/.test(cleanPlate);
+    if (!isValidPlate) {
+      setFormMessage({ type: 'error', text: 'Düzgün Azərbaycan nömrə nişanı daxil edin (məs: 99-EP-223 və ya 10-A-123).' });
+      return;
+    }
+
     setFormLoading(true);
     setFormMessage({ type: '', text: '' });
 
