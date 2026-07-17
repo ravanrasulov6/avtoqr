@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { compressImage } from '../utils/imageCompressor';
 import BlueprintBackground from '../components/BlueprintBackground';
+import AdminQuickAdd from '../components/AdminQuickAdd';
 import { 
   Key, User, Plus, Phone, Car, Image, Check, AlertTriangle, 
   Trash2, QrCode, Download, ExternalLink, LogOut, ArrowLeft, Loader, Edit, Eye
@@ -861,6 +862,11 @@ export default function AdminPortal({ navigate }) {
           </div>
         </div>
       )}
+
+      {/* Admin Quick Add Panel */}
+      <div className="max-w-6xl mx-auto">
+        <AdminQuickAdd />
+      </div>
     </div>
   );
 }
