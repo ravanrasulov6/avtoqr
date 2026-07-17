@@ -21,6 +21,7 @@ export default function App() {
   // "Sayta Əlavə Et" states
   const [sitePhone, setSitePhone] = useState('');
   const [siteName, setSiteName] = useState('');
+  const [sitePlate, setSitePlate] = useState('');
   const [siteLoading, setSiteLoading] = useState(false);
   const [siteMsg, setSiteMsg] = useState(null); // { type: 'success'|'error', text, slug? }
 
@@ -182,6 +183,17 @@ export default function App() {
                       />
                     </div>
                     <div className="qr-field">
+                      <label className="qr-label">Maşın Nömrəsi</label>
+                      <input
+                        type="text"
+                        placeholder="Məs: 99EP223"
+                        value={sitePlate}
+                        onChange={(e) => setSitePlate(e.target.value.toUpperCase())}
+                        className="qr-text-input"
+                        maxLength={10}
+                      />
+                    </div>
+                    <div className="qr-field">
                       <label className="qr-label">Telefon Nömrəsi</label>
                       <div className="qr-input-wrapper">
                         <span className="qr-input-prefix">+994</span>
@@ -204,15 +216,16 @@ export default function App() {
                       onClick={async () => {
                         const cleaned = sitePhone.replace(/\s/g, '');
                         if (!siteName.trim()) { setSiteMsg({ type: 'error', text: 'Ad və soyad daxil edin.' }); return; }
+                        if (!sitePlate.trim()) { setSiteMsg({ type: 'error', text: 'Maşın nömrəsini daxil edin.' }); return; }
                         if (cleaned.length < 9) { setSiteMsg({ type: 'error', text: 'Nömrə 9 rəqəmdən ibarət olmalıdır.' }); return; }
                         setSiteLoading(true);
                         setSiteMsg(null);
                         try {
-                          const slug = siteName.trim().toLowerCase().replace(/[^a-zə0-9]/gi, '').substring(0, 20) + cleaned.substring(5);
+                          const slug = sitePlate.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
                           const payload = {
                             fullname: siteName.trim(),
                             phone_number: `+994${cleaned}`,
-                            car_plate: cleaned,
+                            car_plate: sitePlate.trim().toUpperCase(),
                             custom_slug: slug,
                             whatsapp_enabled: true,
                             emergency_status: false,
@@ -221,6 +234,7 @@ export default function App() {
                           if (error) throw error;
                           setSiteMsg({ type: 'success', text: 'Uğurla sayta əlavə edildi!', slug });
                           setSiteName('');
+                          setSitePlate('');
                           setSitePhone('');
                         } catch (err) {
                           setSiteMsg({ type: 'error', text: err.message || 'Xəta baş verdi.' });
