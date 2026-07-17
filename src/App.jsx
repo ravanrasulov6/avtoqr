@@ -46,12 +46,7 @@ export default function App() {
               <nav className="landing-nav-links">
                 <a href="#features">Necə İşləyir?</a>
               </nav>
-              <button 
-                onClick={() => navigate('/admin')} 
-                className="landing-nav-btn"
-              >
-                Giriş Portalına Keç
-              </button>
+
             </div>
           </header>
 
@@ -78,12 +73,7 @@ export default function App() {
                   >
                     Qeydiyyatdan Keç
                   </a>
-                  <button 
-                    onClick={() => navigate('/admin')} 
-                    className="btn-secondary"
-                  >
-                    Sürücü Girişi
-                  </button>
+
                 </div>
               </div>
 
